@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container py-5">
+    <div class="row"><div class="col-md-8 mx-auto">
+        <h1>Contact Us</h1>
+        <form id="contactForm">
+            <div class="mb-3">
+                <label class="form-label">Name</label>
+                <input type="text" class="form-control" id="name" required>
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Email</label>
+                <input type="email" class="form-control" id="email" required>
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Message</label>
+                <textarea class="form-control" id="message" rows="5" required></textarea>
+            </div>
+            <button type="submit" class="btn btn-primary btn-lg w-100">Send</button>
+        </form>
+    </div></div>
+</div>
+<script>
+document.getElementById('contactForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    fetch('/api/contact', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({name: document.getElementById('name').value, email: document.getElementById('email').value, message: document.getElementById('message').value})
+    }).then(() => {alert('Thank you!'); this.reset();});
+});
+</script>
+{% endblock %}

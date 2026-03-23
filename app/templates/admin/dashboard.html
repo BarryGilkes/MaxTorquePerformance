@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container py-5">
+    <h1>Admin Dashboard</h1>
+    <div class="row">
+        <div class="col-md-4"><div class="card"><div class="card-body"><h6>Products</h6><h2>{{ total_products }}</h2></div></div></div>
+        <div class="col-md-4"><div class="card"><div class="card-body"><h6>Contacts</h6><h2>{{ total_contacts }}</h2></div></div></div>
+        <div class="col-md-4"><div class="card"><div class="card-body"><h6>New Messages</h6><h2 class="text-danger">{{ new_contacts }}</h2></div></div></div>
+    </div>
+    <div class="mt-4">
+        <a href="/admin/products" class="btn btn-primary">Manage Products</a>
+        <a href="/admin/contacts" class="btn btn-primary">View Contacts</a>
+    </div>
+</div>
+{% endblock %}

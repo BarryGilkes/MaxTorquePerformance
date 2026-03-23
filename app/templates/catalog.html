@@ -1,0 +1,170 @@
+{% extends "base.html" %}
+{% block title %}Catalog{% endblock %}
+{% block content %}
+<div class="container py-5">
+    <h1>Catalog</h1>
+    <form method="GET" class="row g-3 mb-4">
+        <div class="col-md-6">
+            <input type="text" name="search" class="form-control" placeholder="Search products..." value="{{ request.args.get('search', '') }}">
+        </div>
+        <div class="col-md-4">
+            <div class="dropdown" data-bs-auto-close="outside">
+                <button class="btn btn-outline-secondary dropdown-toggle w-100 d-flex align-items-center justify-content-between" type="button" id="categoryDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                    <span id="selectedCategoryLabel">All Categories</span>
+                </button>
+                <ul class="dropdown-menu w-100" aria-labelledby="categoryDropdown" style="max-height: 400px; overflow-y: auto; padding: 0.5rem 0;">
+                    <li>
+                        <a class="dropdown-item" href="#" data-category="">All Categories</a>
+                    </li>
+                    {% for root, children in categories %}
+                    {% if children %}
+                    <li class="px-2 py-1">
+                        <div class="d-flex align-items-center toggle-root" role="button" tabindex="0" data-bs-toggle="collapse" data-bs-target="#subcat-{{ root.id }}" aria-expanded="false" style="cursor: pointer;">
+                            <small class="text-muted me-2">▶</small>
+                            <span class="text-dark">{{ root.name }}</span>
+                        </div>
+                        <div class="collapse ms-3" id="subcat-{{ root.id }}">
+                            <a class="dropdown-item small" href="#" data-category="{{ root.slug }}">All {{ root.name }}</a>
+                            {% for child in children %}
+                            <a class="dropdown-item small" href="#" data-category="{{ child.slug }}">{{ child.name }}</a>
+                            {% endfor %}
+                        </div>
+                    </li>
+                    {% else %}
+                    <li>
+                        <a class="dropdown-item" href="#" data-category="{{ root.slug }}">{{ root.name }}</a>
+                    </li>
+                    {% endif %}
+                    {% endfor %}
+                </ul>
+            </div>
+            <input type="hidden" name="category" id="categoryInput" value="{{ request.args.get('category', '') }}">
+        </div>
+        <div class="col-md-2">
+            <button type="submit" class="btn btn-primary w-100">Filter</button>
+        </div>
+    </form>
+
+    <script>
+    (function() {
+        const dropdownMenu = document.querySelector('#categoryDropdown + .dropdown-menu');
+        const categoryInput = document.getElementById('categoryInput');
+        const labelSpan = document.getElementById('selectedCategoryLabel');
+        const dropdownToggle = document.getElementById('categoryDropdown');
+
+        // Set initial label from existing selection
+        const initial = categoryInput.value;
+        if (initial) {
+            const sel = dropdownMenu.querySelector('[data-category="' + initial + '"]');
+            if (sel) labelSpan.textContent = sel.textContent.trim();
+        }
+
+        // Prevent dropdown from closing when clicking on toggle-root elements
+        dropdownMenu.addEventListener('click', function(e) {
+            const target = e.target;
+            // If clicking on a toggle-root (or inside it), stop propagation and just toggle the collapse
+            if (target.closest('.toggle-root')) {
+                e.stopPropagation();
+                // Let Bootstrap handle the collapse via data-bs-toggle; we don't close dropdown
+                return;
+            }
+            // Click on a selectable item (subcategory or root without children)
+            if (target.classList.contains('dropdown-item') && target.dataset.category !== undefined) {
+                e.preventDefault();
+                const slug = target.dataset.category;
+                categoryInput.value = slug;
+                labelSpan.textContent = target.textContent.trim();
+                const dropdown = bootstrap.Dropdown.getInstance(dropdownToggle) || new bootstrap.Dropdown(dropdownToggle);
+                dropdown.hide();
+            }
+        });
+
+        // Toggle rotation of chevron on expand/collapse
+        dropdownMenu.addEventListener('show.bs.collapse', function(e) {
+            const chevron = e.target.closest('li').querySelector('.toggle-root small');
+            if (chevron) chevron.textContent = '▼';
+        });
+        dropdownMenu.addEventListener('hide.bs.collapse', function(e) {
+            const chevron = e.target.closest('li').querySelector('.toggle-root small');
+            if (chevron) chevron.textContent = '▶';
+        });
+
+        // Ensure Bootstrap dropdown doesn't close on menu click (we handle manually)
+        const dropdown = bootstrap.Dropdown.getInstance(dropdownToggle);
+        if (dropdown) {
+            dropdown._menu.addEventListener('click', function(e) {
+                if (e.target.closest && e.target.closest('.toggle-root')) {
+                    e.stopPropagation();
+                }
+            });
+        }
+    })();
+    </script>
+
+    <div class="row">
+        {% for p in products %}
+        <div class="col-md-4 mb-4">
+            <div class="card h-100">
+                {% if p.image_url %}
+                <a href="{{ url_for('public.product_detail', product_id=p.id) }}">
+                    <img src="{{ p.image_url|replace('S.JPG','L.JPG')|replace('s.jpg','l.jpg') }}" class="card-img-top" style="object-fit: contain; background: #f8f9fa; height: 200px;">
+                </a>
+                {% endif %}
+                <div class="card-body">
+                    <h5 class="card-title"><a href="{{ url_for('public.product_detail', product_id=p.id) }}" class="text-decoration-none">{{ p.name }}</a></h5>
+                    <p class="small text-muted mb-1">SKU: {{ p.sku }}</p>
+                    {% set vis = attribute_visibility if attribute_visibility is defined else {} %}
+                    {% if vis.get('brand', True) and p.brand %}
+                    <p class="text-muted">{{ p.brand }}</p>
+                    {% endif %}
+                    <p><strong>${{ "%.2f"|format(p.display_price or 0) }}</strong></p>
+                    {% if vis.get('description', True) and p.description %}
+                    <p class="text-muted small" style="display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;">{{ p.description[:200] }}{% if p.description|length > 200 %}...{% endif %}</p>
+                    {% endif %}
+                    {% if vis.get('dimensions', True) and (p.length or p.width or p.height) %}
+                    <small class="text-muted">
+                        {{ p.length if p.length else '-' }}×{{ p.width if p.width else '-' }}×{{ p.height if p.height else '-' }} in
+                    </small><br>
+                    {% endif %}
+                    {% if vis.get('weight', True) and p.weight %}
+                    <small class="text-muted">
+                        Weight: {{ p.weight }} {{ p.weight_unit if p.weight_unit else 'lb' }}
+                    </small><br>
+                    {% endif %}
+                    {% if p.in_stock %}<span class="badge bg-success">In Stock</span>{% else %}<span class="badge bg-danger">Out</span>{% endif %}
+                </div>
+            </div>
+        </div>
+        {% else %}
+        <p>No products found.</p>
+        {% endfor %}
+    </div>
+    {% if pagination and pagination.pages > 1 %}
+    <nav>
+        <ul class="pagination">
+            {% if pagination.has_prev %}
+            <li class="page-item"><a class="page-link" href="{{ url_for('public.catalog', page=pagination.prev_num, search=request.args.get('search', ''), category=request.args.get('category', '')) }}">Previous</a></li>
+            {% else %}
+            <li class="page-item disabled"><span class="page-link">Previous</span></li>
+            {% endif %}
+            {% for p in pagination.iter_pages(left_edge=1, right_edge=1, left_current=1, right_current=2) %}
+                {% if p %}
+                    {% if p == pagination.page %}
+                    <li class="page-item active"><span class="page-link">{{ p }}</span></li>
+                    {% else %}
+                    <li class="page-item"><a class="page-link" href="{{ url_for('public.catalog', page=p, search=request.args.get('search', ''), category=request.args.get('category', '')) }}">{{ p }}</a></li>
+                    {% endif %}
+                {% else %}
+                <li class="page-item disabled"><span class="page-link">…</span></li>
+                {% endif %}
+            {% endfor %}
+            {% if pagination.has_next %}
+            <li class="page-item"><a class="page-link" href="{{ url_for('public.catalog', page=pagination.next_num, search=request.args.get('search', ''), category=request.args.get('category', '')) }}">Next</a></li>
+            {% else %}
+            <li class="page-item disabled"><span class="page-link">Next</span></li>
+            {% endif %}
+        </ul>
+    </nav>
+    {% endif %}
+</div>
+{% endblock %}

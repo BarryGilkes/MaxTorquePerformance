@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% block title %}Home - Max Torque Performance{% endblock %}
+{% block content %}
+<div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 100px 0; text-align: center;">
+    <div class="container">
+        <h1>Performance Parts. No Compromises.</h1>
+        <p class="lead">Engine • Fuel • Electronics • Drivetrain • Suspension</p>
+        <div class="mt-4">
+            <a href="/catalog" class="btn btn-light btn-lg me-3">Shop Now</a>
+            <a href="/contact" class="btn btn-outline-light btn-lg">Contact</a>
+        </div>
+    </div>
+</div>
+<div class="container py-5">
+    <h2>Featured Products</h2>
+    <div class="row">
+        {% for p in featured_products %}
+        <div class="col-md-3 mb-4">
+            <div class="card h-100">
+                {% if p.image_url %}<img src="{{ p.image_url }}" class="card-img-top">{% endif %}
+                <div class="card-body">
+                    <h5>{{ p.name }}</h5>
+                    <p>${{ "%.2f"|format(p.display_price if p.display_price is not none else 0) }}</p>
+                    <a href="/product/{{ p.id }}" class="btn btn-sm btn-primary">View</a>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

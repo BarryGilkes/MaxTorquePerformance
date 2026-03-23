@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+{% block title %}Catalog{% endblock %}
+{% block content %}
+<div class="container py-5">
+    <h1>Catalog</h1>
+    <form method="GET" class="row g-3 mb-4">
+        <div class="col-md-6">
+            <input type="text" name="search" class="form-control" placeholder="Search products..." value="{{ request.args.get('search', '') }}">
+        </div>
+        <div class="col-md-4">
+            <select name="category" class="form-select">
+                <option value="">All Categories</option>
+                {% for c in categories %}
+                <option value="{{ c.slug }}" {{ 'selected' if request.args.get('category') == c.slug else '' }}>{{ c.name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-md-2">
+            <button type="submit" class="btn btn-primary w-100">Filter</button>
+        </div>
+    </form>
+    <div class="row">
+        {% for p in products %}
+        <div class="col-md-4 mb-4">
+            <div class="card h-100">
+                {% if p.image_url %}
+                <a href="{{ url_for('public.product_detail', product_id=p.id) }}">
+                    <img src="{{ p.image_url }}" class="card-img-top" style="object-fit: cover; height: 200px;">
+                </a>
+                {% endif %}
+                <div class="card-body">
+                    <h5 class="card-title"><a href="{{ url_for('public.product_detail', product_id=p.id) }}" class="text-decoration-none">{{ p.name }}</a></h5>
+                    <p class="text-muted">{{ p.brand }}</p>
+                    <p><strong>${{ "%.2f"|format(p.display_price) }}</strong></p>
+                    {% if p.in_stock %}<span class="badge bg-success">In Stock</span>{% else %}<span class="badge bg-danger">Out</span>{% endif %}
+                </div>
+            </div>
+        </div>
+        {% else %}
+        <p>No products found.</p>
+        {% endfor %}
+    </div>
+    {% if pagination and pagination.pages > 1 %}
+    <nav>
+        <ul class="pagination">
+            {% if pagination.has_prev %}
+            <li class="page-item"><a class="page-link" href="{{ url_for('public.catalog', page=pagination.prev_num, search=request.args.get('search', ''), category=request.args.get('category', '')) }}">Previous</a></li>
+            {% else %}
+            <li class="page-item disabled"><span class="page-link">Previous</span></li>
+            {% endif %}
+            {% for p in pagination.iter_pages(left_edge=1, right_edge=1, left_current=1, right_current=2) %}
+                {% if p %}
+                    {% if p == pagination.page %}
+                    <li class="page-item active"><span class="page-link">{{ p }}</span></li>
+                    {% else %}
+                    <li class="page-item"><a class="page-link" href="{{ url_for('public.catalog', page=p, search=request.args.get('search', ''), category=request.args.get('category', '')) }}">{{ p }}</a></li>
+                    {% endif %}
+                {% else %}
+                <li class="page-item disabled"><span class="page-link">…</span></li>
+                {% endif %}
+            {% endfor %}
+            {% if pagination.has_next %}
+            <li class="page-item"><a class="page-link" href="{{ url_for('public.catalog', page=pagination.next_num, search=request.args.get('search', ''), category=request.args.get('category', '')) }}">Next</a></li>
+            {% else %}
+            <li class="page-item disabled"><span class="page-link">Next</span></li>
+            {% endif %}
+        </ul>
+    </nav>
+    {% endif %}
+</div>
+{% endblock %}

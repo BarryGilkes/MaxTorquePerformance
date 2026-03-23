@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset=UTF-8>
+    <meta name=viewport content=width=device-width, initial-scale=1.0>
+    <title>{% block title %}Max Torque Performance{% endblock %}</title>
+    <link href=https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css rel=stylesheet>
+    <style>
+        body { background-color: #f8f9fa; }
+        .navbar { background-color: #4a6fa5; }
+        .navbar-dark .navbar-nav .nav-link,
+        .navbar-dark .navbar-brand {
+            color: #fff !important;
+        }
+        .navbar-dark .navbar-toggler {
+            border-color: rgba(255,255,255,.5);
+        }
+        .navbar-dark .navbar-toggler-icon {
+            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3e%3cpath stroke='rgba%28255,255,255,0.8%29' stroke-linecap='round' stroke-miterlimit='10' stroke-width='2' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e");
+        }
+        .navbar-brand { font-weight: bold; font-size: 1.5rem; }
+        .navbar-nav .nav-link { padding-left: 1.25rem; padding-right: 1.25rem; }
+    </style>
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <nav class=navbar navbar-expand navbar-dark>
+        <div class=container>
+            <a class=navbar-brand href=/>Max Torque</a>
+            <ul class="navbar-nav ms-auto flex-row">
+                <li class=nav-item><a class=nav-link href=/>Home</a></li>
+                <li class=nav-item><a class=nav-link href=/catalog>Catalog</a></li>
+                <li class=nav-item><a class=nav-link href=/brands>Brands</a></li>
+                <li class=nav-item><a class=nav-link href=/contact>Contact</a></li>
+                {% if current_user.is_authenticated %}
+                <li class=nav-item><a class=nav-link href=/admin/dashboard>Dashboard</a></li>
+                <li class=nav-item><a class=nav-link href=/admin/products>Products</a></li>
+                <li class=nav-item><a class=nav-link href=/admin/categories>Categories</a></li>
+                <li class=nav-item><a class=nav-link href=/admin/attributes>Attributes</a></li>
+                <li class=nav-item><a class=nav-link href=/admin/contacts>Contacts</a></li>
+                <li class=nav-item><a class=nav-link href=/admin/sync-logs>Sync Logs</a></li>
+                <li class=nav-item><a class=nav-link href=/admin/logout>Logout</a></li>
+                {% endif %}
+            </ul>
+        </div>
+    </nav>
+    {% with messages = get_flashed_messages() %}{% if messages %}
+        {% for message in messages %}<div class=alert alert-info m-3>{{ message }}</div>{% endfor %}
+    {% endif %}{% endwith %}
+    <main>{% block content %}{% endblock %}</main>
+    <footer class=bg-dark text-white text-center py-4 mt-5>
+        <p>&copy; 2026 Max Torque Performance</p>
+    </footer>
+    <script src=https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js></script>
+</body>
+</html>

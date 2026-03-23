@@ -1,0 +1,159 @@
+import requests
+import os
+from datetime import datetime
+from dotenv import load_dotenv
+from app import db
+from app.models import Product, SyncLog, Category
+
+load_dotenv()
+
+TURN14_BASE_URL = os.getenv('TURN14_API_URL', 'https://apitest.turn14.com')
+CLIENT_ID = os.getenv('TURN14_CLIENT_ID')
+CLIENT_SECRET = os.getenv('TURN14_CLIENT_SECRET')
+
+def get_turn14_token():
+    try:
+        resp = requests.post(
+            f"{TURN14_BASE_URL}/v1/token",
+            data={"client_id": CLIENT_ID, "client_secret": CLIENT_SECRET, "grant_type": "client_credentials"},
+            timeout=10
+        )
+        if resp.status_code != 200:
+            return None
+        return resp.json().get('access_token')
+    except Exception as e:
+        print(f"Token error: {e}")
+        return None
+
+def get_or_create_category(name, parent_name=None):
+    name = name.strip()
+    if not name:
+        return None
+    slug = name.lower().replace(' ', '-')
+    parent_id = None
+    if parent_name:
+        parent_name = parent_name.strip()
+        if parent_name:
+            parent_slug = parent_name.lower().replace(' ', '-')
+            parent = Category.query.filter_by(slug=parent_slug, parent_id=None).first()
+            if not parent:
+                parent = Category(name=parent_name, slug=parent_slug)
+                db.session.add(parent)
+                db.session.flush()
+            parent_id = parent.id
+    category = Category.query.filter_by(slug=slug, parent_id=parent_id).first()
+    if not category:
+        category = Category(name=name, slug=slug, parent_id=parent_id)
+        db.session.add(category)
+    return category
+
+def sync_products_from_turn14():
+    token = get_turn14_token()
+    if not token:
+        log_sync('products', 'failed', 0, 'No auth token')
+        return
+
+    headers = {"Authorization": f"Bearer {token}"}
+    page = 1
+    synced = 0
+    batch_commit = 50
+    sku_map = {}
+    category_cache = {}
+    try:
+        while True:
+            r = requests.get(f"{TURN14_BASE_URL}/v1/items", params={"page": page, "limit": 100}, headers=headers, timeout=10)
+            if r.status_code == 429:
+                log_sync('products', 'failed', synced, 'Rate limited')
+                break
+            if r.status_code != 200:
+                log_sync('products', 'failed', synced, f'HTTP {r.status_code}')
+                break
+            items = r.json().get('data', [])
+            if not items:
+                break
+
+            for item in items:
+                attrs = item.get('attributes', {})
+                item_id = item['id']
+                sku = attrs.get('part_number') or attrs.get('mfr_part_number') or str(item_id)
+                sku = str(sku)
+
+                if sku in sku_map:
+                    product = sku_map[sku]
+                else:
+                    product = Product.query.filter_by(sku=sku).first()
+                    if not product:
+                        product = Product(sku=sku, turn14_item_id=item_id)
+                    else:
+                        product.turn14_item_id = item_id
+                    sku_map[sku] = product
+
+                product.name = attrs.get('product_name') or attrs.get('part_description') or sku
+                product.brand = attrs.get('brand') or 'Unknown'
+                product.description = attrs.get('part_description')
+                product.image_url = attrs.get('thumbnail')
+                can_order = any(loc.get('can_place_order', False) for loc in attrs.get('warehouse_availability', []))
+                product.turn14_stock = 1 if can_order else 0
+                product.in_stock = can_order
+                product.turn14_price = 0
+                product.markup_percent = 0
+                product.display_price = 0
+                product.last_synced = datetime.utcnow()
+
+                # Category assignment
+                cat_name = attrs.get('category')
+                subcat_name = attrs.get('subcategory')
+                if cat_name:
+                    if subcat_name:
+                        parent_key = (cat_name, None)
+                        parent = category_cache.get(parent_key)
+                        if not parent:
+                            parent = Category.query.filter_by(name=cat_name, parent_id=None).first()
+                            if parent:
+                                category_cache[parent_key] = parent
+                            else:
+                                parent = Category(name=cat_name, slug=cat_name.lower().replace(' ', '-'))
+                                db.session.add(parent)
+                                db.session.flush()
+                                category_cache[parent_key] = parent
+                        subcat_key = (subcat_name, parent.id)
+                        category = category_cache.get(subcat_key)
+                        if not category:
+                            category = Category.query.filter_by(name=subcat_name, parent_id=parent.id).first()
+                            if category:
+                                category_cache[subcat_key] = category
+                            else:
+                                category = Category(name=subcat_name, slug=subcat_name.lower().replace(' ', '-'), parent_id=parent.id)
+                                db.session.add(category)
+                                category_cache[subcat_key] = category
+                        product.category = category
+                    else:
+                        key = (cat_name, None)
+                        category = category_cache.get(key)
+                        if not category:
+                            category = Category.query.filter_by(name=cat_name, parent_id=None).first()
+                            if category:
+                                category_cache[key] = category
+                            else:
+                                category = Category(name=cat_name, slug=cat_name.lower().replace(' ', '-'))
+                                db.session.add(category)
+                                category_cache[key] = category
+                        product.category = category
+
+                db.session.add(product)
+                synced += 1
+                if synced % batch_commit == 0:
+                    db.session.commit()
+
+            page += 1
+
+        db.session.commit()
+        log_sync('products', 'success', synced)
+    except Exception as e:
+        db.session.rollback()
+        log_sync('products', 'failed', synced, str(e))
+
+def log_sync(endpoint, status, count, error=None):
+    log = SyncLog(endpoint=endpoint, status=status, items_synced=count, error_message=error)
+    db.session.add(log)
+    db.session.commit()

@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% block title %}{{ 'Edit' if category else 'Create' }} Category{% endblock %}
+{% block content %}
+<div class="container py-5">
+    <h1>{{ 'Edit' if category else 'Create' }} Category</h1>
+    <form method="POST">
+        <div class="mb-3">
+            <label class="form-label">Name *</label>
+            <input type="text" name="name" class="form-control" required value="{{ category.name if category else '' }}">
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Slug *</label>
+            <input type="text" name="slug" class="form-control" required value="{{ category.slug if category else '' }}">
+            <small class="text-muted">Lowercase, no spaces (e.g., "engine", "suspension")</small>
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Description</label>
+            <textarea name="description" class="form-control">{{ category.description if category else '' }}</textarea>
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Parent Category</label>
+            <select name="parent_id" class="form-select">
+                <option value="">— None (top level) —</option>
+                {% for p in parents %}
+                <option value="{{ p.id }}" {{ 'selected' if category and category.parent_id == p.id else '' }}>{{ p.name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <button type="submit" class="btn btn-primary">Save</button>
+        <a href="{{ url_for('admin.categories') }}" class="btn btn-secondary">Cancel</a>
+    </form>
+</div>
+{% endblock %}
