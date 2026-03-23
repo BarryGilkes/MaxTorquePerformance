@@ -1,15 +1,21 @@
-/* Modern Custom Styles for Max Torque Performance – matching maxtorqueperformance.com */
+/* Custom Styles for Max Torque Performance – Blue and Orange color scheme */
 
 :root {
+    /* Blue tones */
     --primary: #007cba;
     --primary-dark: #005a87;
-    --accent: #7a00df;
-    --accent-light: #9b4de0;
+    --primary-light: #4aadd6;
+    /* Orange tones */
+    --accent: #ff7b00;
+    --accent-dark: #e56800;
+    --accent-light: #ff9933;
+    /* Neutrals */
     --dark: #1a1a1a;
     --text: #333333;
     --text-muted: #6d6d6d;
     --light-bg: #f8f9fa;
     --white: #ffffff;
+    /* UI elements */
     --card-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
     --transition: all 0.3s ease;
 }
@@ -83,8 +89,7 @@ body {
 }
 
 /* Buttons */
-.btn-primary,
-.wp-block-button__link:not(.has-background) {
+.btn-primary {
     background: var(--primary);
     border: none;
     font-weight: 600;
@@ -92,11 +97,9 @@ body {
     border-radius: 8px;
     transition: var(--transition);
     color: var(--white);
-    text-decoration: none;
 }
 
-.btn-primary:hover,
-.wp-block-button__link:not(.has-background):hover {
+.btn-primary:hover {
     background: var(--primary-dark);
     transform: translateY(-2px);
     box-shadow: 0 4px 12px rgba(0, 124, 186, 0.4);
@@ -104,23 +107,24 @@ body {
 }
 
 .btn-secondary {
-    background-color: var(--dark);
-    border-color: var(--dark);
+    background-color: var(--accent);
+    border-color: var(--accent);
     font-weight: 600;
     padding: 0.5rem 1.25rem;
     border-radius: 8px;
     transition: var(--transition);
+    color: var(--white);
 }
 
 .btn-secondary:hover {
-    background-color: #333;
-    border-color: #333;
+    background-color: var(--accent-dark);
+    border-color: var(--accent-dark);
     transform: translateY(-2px);
 }
 
 /* Hero section on home page */
 .bg-gradient-hero {
-    background: linear-gradient(135deg, #007cba 0%, #7a00df 50%, #9b4de0 100%) !important;
+    background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%) !important;
     color: white;
     padding: 120px 0;
     margin-bottom: 2rem;
@@ -174,7 +178,7 @@ body {
 }
 
 .table thead th {
-    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+    background: var(--primary);
     color: white;
     font-weight: 600;
     border: none;
