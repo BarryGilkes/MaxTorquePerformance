@@ -1,4 +1,4 @@
-/* Modern Custom Styles for Max Torque Performance – colors inspired by maxtorqueperformance.com */
+/* Modern Custom Styles for Max Torque Performance – matching maxtorqueperformance.com */
 
 :root {
     --primary: #007cba;
@@ -83,18 +83,21 @@ body {
 }
 
 /* Buttons */
-.btn-primary {
-    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+.btn-primary,
+.wp-block-button__link:not(.has-background) {
+    background: var(--primary);
     border: none;
     font-weight: 600;
     padding: 0.5rem 1.25rem;
     border-radius: 8px;
     transition: var(--transition);
     color: var(--white);
+    text-decoration: none;
 }
 
-.btn-primary:hover {
-    background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary) 100%);
+.btn-primary:hover,
+.wp-block-button__link:not(.has-background):hover {
+    background: var(--primary-dark);
     transform: translateY(-2px);
     box-shadow: 0 4px 12px rgba(0, 124, 186, 0.4);
     color: var(--white);
