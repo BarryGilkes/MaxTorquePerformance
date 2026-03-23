@@ -18,7 +18,9 @@
             <a href="{{ url_for('public.catalog') }}?brand={{ brand.name|urlencode }}" class="text-decoration-none">
                 <div class="card h-100 text-center shadow-sm p-2">
                     {% if brand.logo %}
-                    <img src="{{ brand.logo }}" alt="{{ brand.name }} logo" class="brand-logo img-fluid mb-2" style="max-height: 80px; max-width: 100%;">
+                    <div class="brand-logo-container d-flex justify-content-center align-items-center" style="height: 80px;">
+                        <img src="{{ brand.logo }}" alt="{{ brand.name }} logo" class="brand-logo img-fluid" style="max-width: 100%; max-height: 100%; object-fit: contain;">
+                    </div>
                     {% else %}
                     <div class="brand-name fs-5 fw-medium">{{ brand.name }}</div>
                     {% endif %}
@@ -33,11 +35,8 @@
 
 {% block extra_css %}
 <style>
-.brand-logo {
-    object-fit: contain;
-}
-.card:hover .brand-name {
-    color: #0066cc;
+.brand-logo-container {
+    width: 100%;
 }
 </style>
 {% endblock %}
