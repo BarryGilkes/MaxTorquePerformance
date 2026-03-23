@@ -1,8 +1,9 @@
 {% extends "base.html" %}
 {% block title %}Home - Max Torque Performance{% endblock %}
 {% block content %}
-<div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 100px 0; text-align: center;">
+<div class="bg-gradient-hero text-center">
     <div class="container">
+        <img src="{{ url_for('static', filename='img/logo.png') }}" alt="Max Torque Performance" height="100" class="mb-3">
         <h1>Performance Parts. No Compromises.</h1>
         <p class="lead">Engine • Fuel • Electronics • Drivetrain • Suspension</p>
         <div class="mt-4">
